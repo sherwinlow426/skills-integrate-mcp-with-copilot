@@ -1,8 +1,12 @@
 document.addEventListener("DOMContentLoaded", () => {
   const activitiesList = document.getElementById("activities-list");
-  const activitySelect = document.getElementById("activity");
-  const signupForm = document.getElementById("signup-form");
   const messageDiv = document.getElementById("message");
+
+  function showMessage(text, type) {
+    messageDiv.textContent = text;
+    messageDiv.className = `message ${type}`;
+    setTimeout(() => messageDiv.classList.add("hidden"), 5000);
+  }
 
   // Function to fetch activities from API
   async function fetchActivities() {
@@ -14,7 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
       activitiesList.innerHTML = "";
 
       // Populate activities list
-      Object.entries(activities).forEach(([name, details]) => {
+      Object.entries(activities).forEach(([name, details], index) => {
         const activityCard = document.createElement("div");
         activityCard.className = "activity-card";
 
@@ -30,7 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 ${details.participants
                   .map(
                     (email) =>
-                      `<li><span class="participant-email">${email}</span><button class="delete-btn" data-activity="${name}" data-email="${email}">❌</button></li>`
+                      `<li><span class="participant-email">${email}</span><button class="delete-btn" data-activity="${encodeURIComponent(name)}" data-email="${encodeURIComponent(email)}" aria-label="Unregister ${email}">Remove</button></li>`
                   )
                   .join("")}
               </ul>
@@ -45,20 +49,36 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="participants-container">
             ${participantsHTML}
           </div>
+          <button class="register-toggle" type="button" aria-expanded="false" aria-controls="signup-form-${index}">Register student</button>
+          <form class="signup-form hidden" id="signup-form-${index}" data-activity="${encodeURIComponent(name)}">
+            <div class="form-group">
+              <label for="student-email-${index}">Student email</label>
+              <input type="email" id="student-email-${index}" name="email" required placeholder="your-email@mergington.edu" />
+            </div>
+            <button type="submit">Sign up</button>
+          </form>
         `;
 
         activitiesList.appendChild(activityCard);
-
-        // Add option to select dropdown
-        const option = document.createElement("option");
-        option.value = name;
-        option.textContent = name;
-        activitySelect.appendChild(option);
       });
 
       // Add event listeners to delete buttons
       document.querySelectorAll(".delete-btn").forEach((button) => {
         button.addEventListener("click", handleUnregister);
+      });
+      document.querySelectorAll(".register-toggle").forEach((button) => {
+        button.addEventListener("click", () => {
+          const form = document.getElementById(button.getAttribute("aria-controls"));
+          const isOpening = form.classList.contains("hidden");
+          form.classList.toggle("hidden", !isOpening);
+          button.setAttribute("aria-expanded", String(isOpening));
+          if (isOpening) {
+            form.querySelector("input").focus();
+          }
+        });
+      });
+      document.querySelectorAll(".signup-form").forEach((form) => {
+        form.addEventListener("submit", handleSignup);
       });
     } catch (error) {
       activitiesList.innerHTML =
@@ -69,9 +89,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Handle unregister functionality
   async function handleUnregister(event) {
-    const button = event.target;
-    const activity = button.getAttribute("data-activity");
-    const email = button.getAttribute("data-email");
+    const button = event.currentTarget;
+    const activity = decodeURIComponent(button.getAttribute("data-activity"));
+    const email = decodeURIComponent(button.getAttribute("data-email"));
 
     try {
       const response = await fetch(
@@ -86,36 +106,24 @@ document.addEventListener("DOMContentLoaded", () => {
       const result = await response.json();
 
       if (response.ok) {
-        messageDiv.textContent = result.message;
-        messageDiv.className = "success";
+        showMessage(result.message, "success");
 
         // Refresh activities list to show updated participants
         fetchActivities();
       } else {
-        messageDiv.textContent = result.detail || "An error occurred";
-        messageDiv.className = "error";
+        showMessage(result.detail || "An error occurred", "error");
       }
-
-      messageDiv.classList.remove("hidden");
-
-      // Hide message after 5 seconds
-      setTimeout(() => {
-        messageDiv.classList.add("hidden");
-      }, 5000);
     } catch (error) {
-      messageDiv.textContent = "Failed to unregister. Please try again.";
-      messageDiv.className = "error";
-      messageDiv.classList.remove("hidden");
+      showMessage("Failed to unregister. Please try again.", "error");
       console.error("Error unregistering:", error);
     }
   }
 
-  // Handle form submission
-  signupForm.addEventListener("submit", async (event) => {
+  async function handleSignup(event) {
     event.preventDefault();
-
-    const email = document.getElementById("email").value;
-    const activity = document.getElementById("activity").value;
+    const form = event.currentTarget;
+    const email = form.elements.email.value;
+    const activity = decodeURIComponent(form.getAttribute("data-activity"));
 
     try {
       const response = await fetch(
@@ -130,30 +138,19 @@ document.addEventListener("DOMContentLoaded", () => {
       const result = await response.json();
 
       if (response.ok) {
-        messageDiv.textContent = result.message;
-        messageDiv.className = "success";
-        signupForm.reset();
+        showMessage(result.message, "success");
+        form.reset();
 
         // Refresh activities list to show updated participants
         fetchActivities();
       } else {
-        messageDiv.textContent = result.detail || "An error occurred";
-        messageDiv.className = "error";
+        showMessage(result.detail || "An error occurred", "error");
       }
-
-      messageDiv.classList.remove("hidden");
-
-      // Hide message after 5 seconds
-      setTimeout(() => {
-        messageDiv.classList.add("hidden");
-      }, 5000);
     } catch (error) {
-      messageDiv.textContent = "Failed to sign up. Please try again.";
-      messageDiv.className = "error";
-      messageDiv.classList.remove("hidden");
+      showMessage("Failed to sign up. Please try again.", "error");
       console.error("Error signing up:", error);
     }
-  });
+  }
 
   // Initialize app
   fetchActivities();

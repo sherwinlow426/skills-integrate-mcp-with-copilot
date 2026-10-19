@@ -29,25 +29,14 @@ header h1 {
 }
 
 main {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 30px;
-  justify-content: center;
-}
-
-@media (min-width: 768px) {
-  main {
-    grid-template-columns: 2fr 1fr;
-  }
+  display: block;
 }
 
 section {
   background-color: white;
   padding: 20px;
-  border-radius: 5px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   width: 100%;
-  max-width: 500px;
+  max-width: none;
 }
 
 section h3 {
@@ -58,7 +47,9 @@ section h3 {
 }
 
 .activity-card {
-  margin-bottom: 15px;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
   padding: 15px;
   border: 1px solid #ddd;
   border-radius: 5px;
@@ -72,6 +63,32 @@ section h3 {
 
 .activity-card p {
   margin-bottom: 8px;
+  overflow-wrap: anywhere;
+}
+
+#activities-container {
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+#activities-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  align-items: stretch;
+}
+
+.activity-card .participants-container {
+  flex: 1;
+}
+
+.activity-card .register-toggle {
+  margin-top: 16px;
+}
+
+.signup-form {
+  margin-top: 12px;
 }
 
 /* New styles for participants section */
@@ -100,6 +117,10 @@ section h3 {
   justify-content: space-between;
 }
 
+.participants-section ul li + li {
+  border-top: 1px solid #e5e5e5;
+}
+
 /* Remove the bullet point pseudo-element */
 .participants-section ul li::before {
   display: none;
@@ -111,18 +132,23 @@ section h3 {
 }
 
 .delete-btn {
-  background: none;
-  border: none;
-  color: #c62828;
+  flex: 0 0 auto;
+  background: #fff;
+  border: 1px solid #c62828;
+  color: #9b1c1c;
   cursor: pointer;
   font-size: 14px;
-  padding: 2px 5px;
-  transition: all 0.2s;
+  padding: 5px 9px;
   border-radius: 3px;
 }
 
 .delete-btn:hover {
   background-color: #ffebee;
+}
+
+.participant-email {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .participants-section p {
@@ -165,7 +191,7 @@ button:hover {
 }
 
 .message {
-  margin-top: 20px;
+  margin: 0 0 16px;
   padding: 10px;
   border-radius: 4px;
 }
@@ -190,6 +216,44 @@ button:hover {
 
 .hidden {
   display: none;
+}
+
+@media (max-width: 900px) {
+  #activities-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  body {
+    padding: 12px;
+  }
+
+  header {
+    padding: 18px 12px;
+    margin-bottom: 18px;
+  }
+
+  header h1 {
+    font-size: 24px;
+  }
+
+  header h2 {
+    font-size: 18px;
+  }
+
+  section {
+    padding: 14px;
+  }
+
+  #activities-list {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .participants-section ul li {
+    gap: 8px;
+  }
 }
 
 footer {
